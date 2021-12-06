@@ -57,7 +57,8 @@ log.model <- glm(death ~ los + age + gender + cancer + cabg + crt + defib + deme
 for_death <- coef(log.model)[coef(log.model) > 0]
 h2.model <- glm(death ~ los + age + cancer + dementia + diabetes + ihd + copd + obesity + renal_disease + metastatic_cancer + pacemaker +prior_dnas + pci + stroke + senile + fu_time, data = dataset, family = binomial())
 h2.model.2 <- glm(death ~ los * age, data = heart.failure, family = binomial())
-
+min_age <- min(dataset_without_NA$age)
+max_age <- max(dataset_without_NA$age)
 
 ui <-
   fluidPage(
@@ -126,7 +127,6 @@ ui <-
               h4("1. To test the hypothesis, let's make a first plot"),
               br(),
               plotOutput("gender_plot_1"),
-              p("gender: 1 = male / 2 = female"),
               br(),
               p(
                 "The bar plot above shows that the amount of men and women are about equally distributed in cases of survival and death."
@@ -191,11 +191,35 @@ ui <-
             h4("1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"),
             verbatimTextOutput("h3_summary_lm_all")
           )),
-          tabPanel("Hypothesis 4", ),
-          tabPanel("Hypothesis 5", ),
+          tabPanel("Hypothesis 4",
+                   wellPanel(
+                     
+                   )),
+          tabPanel("Hypothesis 5", 
+                   wellPanel(
+                   )),
         )
       ),
-      tabPanel("Modelling", plotOutput("plot1"))
+      tabPanel("Age",
+               h3("Percentage death rate within an age group"),
+               br(),
+               sidebarPanel(
+                 sliderInput(inputId = "min_age", label = "Minimum age:", value = min_age, min = min_age, 
+                             max = max_age, sep = ""),
+                 sliderInput(inputId = "max_age", label = "Maximum age:", value = max_age, min = min_age, 
+                             max = max_age, sep = ""),
+                 
+               ),
+               mainPanel(
+               wellPanel(
+                 plotOutput("age_piechart"),
+      )),
+      br(),
+      h3("Effect of patient age on dying"),
+      wellPanel(
+        plotOutput("curve_age_dying")
+        
+      ))
     )
   )
 
@@ -261,7 +285,10 @@ server <- function(input, output, session) {
   
   output$gender_plot_1 <- renderPlot({
     ggplot(heart.failure, aes(x = death)) +
-      geom_bar(aes(fill = gender))
+      geom_bar(aes(fill = gender)) +
+      labs(title = "Proportion of gender in patient status", x = "Patient Status", y = "# of Cases") +
+      scale_x_discrete(labels = c("Alive", "Dead")) +
+      scale_fill_manual(name = "Gender", labels = c("Male", "Female"), values = c("cornflowerblue", "hotpink"))
   })
   
   output$gender_CrossTable <- renderPrint(
@@ -298,6 +325,29 @@ server <- function(input, output, session) {
     renderPrint(
       summary(h2.model.2)
     )
+  
+  output$curve_age_dying <-
+    renderPlot({
+      ggplot(heart.failure, aes(x = age, y = as.numeric(death) - 1)) +
+        geom_point(alpha = 0.25) +
+        stat_smooth(method = "glm", aes(color = "red"), se = T, fullrange = T, method.args = list(family = binomial)) +
+        theme(legend.position = "none") +
+        labs(title = "Effect of Patient Age on dying", x = "Patient Age (in years)", y = "Chance of Death") +
+        scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + xlim(0, 150)
+    })
+  
+  output$age_piechart <-
+    renderPlot({
+      ggplot(data = data.frame(group = c("alive","death"), value = c(length(dataset$id[dataset$age >= input$min_age & dataset$age <= input$max_age & dataset$death == 0]), 
+               length(dataset$id[dataset$age >= input$min_age & dataset$age <= input$max_age & dataset$death == 1]))),
+             aes(x="", y=value, fill=group)) +
+        geom_bar(stat="identity", width=1) +
+        coord_polar("y", start=0) +
+        labs(title = "", x = "", y = "")
+    })
+  
+  observe(updateSliderInput(session, "max_age", min = input$min_age))
+  
 }
 
 
