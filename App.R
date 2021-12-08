@@ -258,7 +258,7 @@ ui <-
         sidebarPanel(
           radioButtons(
           inputId = "radio",
-          label = "Shwon data:",
+          label = "Shown data:",
           choices = list(
             "both" = 1,
             "alive" = 2,
