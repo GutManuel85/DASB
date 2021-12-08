@@ -15,6 +15,9 @@ library(officer)
 library(shinydashboard)
 library(shinyWidgets)
 library(gmodels)
+library(ggrepel)
+library(waffle)
+
 rm(list = ls())
 dataset <- read_csv("dataset_heartFailure.csv")
 dataset_without_NA <- na.omit(dataset)
@@ -158,39 +161,39 @@ ui <-
           tabPanel(
             "Hypothesis 2",
             wellPanel(
-            h3(
-              "Hypothesis 2: There are comorbidities which feature significantly in fatalities."
-            ),
-            br(),
-            h4("1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"),
-            verbatimTextOutput("h2_summary_lm_all"),
-            br(),
-            h4("2. Now, let's have a look, which parameters favor a fatal outcome"),
-            verbatimTextOutput("h2_parameters_favor_fatal"),
-            br(),
-            h4("3. Let's check, which of these parameters are significant"),
-            verbatimTextOutput("h2_signifigant_parameter"),
-            p("According to the modell, 'los' and 'age' are quite signficant, 'metastatic_cancer' and 'prior_dnas' are somewhat significant and 'dementia' is barely significant."),
-            br(),
-            p("If we only choose the two most sicnificant parameter, we can see, that only age is significant"),
-            verbatimTextOutput("h2_only_two_parameter"),
-            br(),
-            h4("4. Final assessment of the hypothesis"),
-            p(
-              "The hypothesis is not confirmed. The parameter age is significant, but age cannot be viewed as a real comorbidity. All other commorbities seems to be not significant, whether someone is dying after a heart failure or not."
-            )
-            
-          )),
+              h3(
+                "Hypothesis 2: There are comorbidities which feature significantly in fatalities."
+              ),
+              br(),
+              h4("1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"),
+              verbatimTextOutput("h2_summary_lm_all"),
+              br(),
+              h4("2. Now, let's have a look, which parameters favor a fatal outcome"),
+              verbatimTextOutput("h2_parameters_favor_fatal"),
+              br(),
+              h4("3. Let's check, which of these parameters are significant"),
+              verbatimTextOutput("h2_signifigant_parameter"),
+              p("According to the modell, 'los' and 'age' are quite signficant, 'metastatic_cancer' and 'prior_dnas' are somewhat significant and 'dementia' is barely significant."),
+              br(),
+              p("If we only choose the two most sicnificant parameter, we can see, that only age is significant"),
+              verbatimTextOutput("h2_only_two_parameter"),
+              br(),
+              h4("4. Final assessment of the hypothesis"),
+              p(
+                "The hypothesis is not confirmed. The parameter age is significant, but age cannot be viewed as a real comorbidity. All other commorbities seems to be not significant, whether someone is dying after a heart failure or not."
+              )
+              
+            )),
           tabPanel(
             "Hypothesis 3",
             wellPanel(
-            h3(
-              "Hypothesis 3: There are other comorbidities which feature significantly in survival."
-            ),
-            br(),
-            h4("1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"),
-            verbatimTextOutput("h3_summary_lm_all")
-          )),
+              h3(
+                "Hypothesis 3: There are other comorbidities which feature significantly in survival."
+              ),
+              br(),
+              h4("1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"),
+              verbatimTextOutput("h3_summary_lm_all")
+            )),
           tabPanel("Hypothesis 4",
                    wellPanel(
                      
@@ -208,18 +211,23 @@ ui <-
                              max = max_age, sep = ""),
                  sliderInput(inputId = "max_age", label = "Maximum age:", value = max_age, min = min_age, 
                              max = max_age, sep = ""),
-                 
+                 selectInput(
+                   inputId = "chart_type",
+                   label = "Chart type:",
+                   choices = c("Pie chart", "Waffle chart") ,
+                   selected = "Pie chart"
+                 )
                ),
                mainPanel(
+                 wellPanel(
+                   plotOutput("age_chart"),
+                 )),
+               br(),
+               h3("Effect of patient age on dying"),
                wellPanel(
-                 plotOutput("age_piechart"),
-      )),
-      br(),
-      h3("Effect of patient age on dying"),
-      wellPanel(
-        plotOutput("curve_age_dying")
-        
-      ))
+                 plotOutput("curve_age_dying")
+                 
+               ))
     )
   )
 
@@ -318,7 +326,7 @@ server <- function(input, output, session) {
   
   output$h2_signifigant_parameter <-
     renderPrint(
-    summary(h2.model)
+      summary(h2.model)
     )
   
   output$h2_only_two_parameter <-
@@ -336,18 +344,52 @@ server <- function(input, output, session) {
         scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + xlim(0, 150)
     })
   
-  output$age_piechart <-
+  output$age_chart <-
     renderPlot({
+      mytitle <-
+        paste(
+          "Percentage death rate within the age group from",
+          input$min_age,
+          "to",
+          input$max_age
+        )
+      if(input$chart_type == "Pie chart"){
       ggplot(data = data.frame(group = c("alive","death"), value = c(length(dataset$id[dataset$age >= input$min_age & dataset$age <= input$max_age & dataset$death == 0]), 
-               length(dataset$id[dataset$age >= input$min_age & dataset$age <= input$max_age & dataset$death == 1]))),
+                                                                     length(dataset$id[dataset$age >= input$min_age & dataset$age <= input$max_age & dataset$death == 1]))),
              aes(x="", y=value, fill=group)) +
         geom_bar(stat="identity", width=1) +
         coord_polar("y", start=0) +
-        labs(title = "", x = "", y = "")
+        labs(title = mytitle, x = "", y = "") +
+        scale_fill_brewer(palette = "Dark2") +
+        geom_label_repel(
+          aes(label = c(
+            length(dataset$id[dataset$age >= input$min_age &
+                                dataset$age <= input$max_age & dataset$death == 0]),
+            length(dataset$id[dataset$age >= input$min_age &
+                                dataset$age <= input$max_age &
+                                dataset$death == 1])
+          )),
+          size = 5,
+          show.legend = F,
+          nudge_x = 1
+        ) +
+        guides(fill = guide_legend(title = ""))
+      }else{
+          values <-
+            c(length(dataset$id[dataset$age >= input$min_age &
+                                  dataset$age <= input$max_age & dataset$death == 0]),
+              length(dataset$id[dataset$age >= input$min_age &
+                                  dataset$age <= input$max_age & dataset$death == 1]))
+          names <- c("alive", "death")
+          named_vector <-setNames(values, names)
+          waffle::waffle(named_vector, colors = c("seagreen", "chocolate")) +
+            theme(legend.position = "right") +
+            labs(title = mytitle, x = "", y = "")
+      }
     })
   
   observe(updateSliderInput(session, "max_age", min = input$min_age))
-  
+
 }
 
 
