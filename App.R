@@ -3,6 +3,7 @@
 # https://www.youtube.com/watch?v=u8KCw3VtFW8
 # https://stackoverflow.com/questions/34663099/how-to-center-an-image-in-a-shiny-app
 # https://www.r-graph-gallery.com/215-the-heatmap-function.html
+# https://www.datanovia.com/en/blog/ggplot-colors-best-tricks-you-will-love/
 
 library(readr)
 library(datasets)
@@ -56,10 +57,22 @@ cols <-
     "fu_time"
   )
 heart.failure[cols] <- lapply(heart.failure[cols], factor)
-log.model <- glm(death ~ los + age + gender + cancer + cabg + crt + defib + dementia + diabetes + hypertension + ihd + mental_health +  arrhythmias + copd + obesity + pvd + renal_disease + metastatic_cancer + pacemaker + pneumonia + prior_appts_attended + prior_dnas + pci + stroke + senile + quintile + fu_time, data = dataset, family = binomial())
+log.model <-
+  glm(
+    death ~ los + age + gender + cancer + cabg + crt + defib + dementia + diabetes + hypertension + ihd + mental_health +  arrhythmias + copd + obesity + pvd + renal_disease + metastatic_cancer + pacemaker + pneumonia + prior_appts_attended + prior_dnas + pci + stroke + senile + quintile + fu_time,
+    data = dataset,
+    family = binomial()
+  )
 for_death <- coef(log.model)[coef(log.model) > 0]
-h2.model <- glm(death ~ los + age + cancer + dementia + diabetes + ihd + copd + obesity + renal_disease + metastatic_cancer + pacemaker +prior_dnas + pci + stroke + senile + fu_time, data = dataset, family = binomial())
-h2.model.2 <- glm(death ~ los * age, data = heart.failure, family = binomial())
+h2.model <-
+  glm(
+    death ~ los + age + cancer + dementia + diabetes + ihd + copd + obesity + renal_disease + metastatic_cancer + pacemaker +
+      prior_dnas + pci + stroke + senile + fu_time,
+    data = dataset,
+    family = binomial()
+  )
+h2.model.2 <-
+  glm(death ~ los * age, data = heart.failure, family = binomial())
 min_age <- min(dataset_without_NA$age)
 max_age <- max(dataset_without_NA$age)
 
@@ -71,7 +84,7 @@ ui <-
       id = "navbarID",
       setBackgroundImage(src = "sky.png"),
       tabPanel(
-        "Background",
+        "Introduction",
         HTML('<center><img src="reasons.png" width="600"></center>'),
         br(),
         br(),
@@ -88,7 +101,7 @@ ui <-
           tabPanel("Summary", verbatimTextOutput("summary")),
           tabPanel("Structure", verbatimTextOutput("structure")),
           tabPanel(" Show data",
-                   tableOutput("data"), )
+                   tableOutput("data"),)
         )
       ),
       tabPanel("Big Picture",
@@ -165,7 +178,9 @@ ui <-
                 "Hypothesis 2: There are comorbidities which feature significantly in fatalities."
               ),
               br(),
-              h4("1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"),
+              h4(
+                "1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"
+              ),
               verbatimTextOutput("h2_summary_lm_all"),
               br(),
               h4("2. Now, let's have a look, which parameters favor a fatal outcome"),
@@ -173,9 +188,13 @@ ui <-
               br(),
               h4("3. Let's check, which of these parameters are significant"),
               verbatimTextOutput("h2_signifigant_parameter"),
-              p("According to the modell, 'los' and 'age' are quite signficant, 'metastatic_cancer' and 'prior_dnas' are somewhat significant and 'dementia' is barely significant."),
+              p(
+                "According to the modell, 'los' and 'age' are quite signficant, 'metastatic_cancer' and 'prior_dnas' are somewhat significant and 'dementia' is barely significant."
+              ),
               br(),
-              p("If we only choose the two most sicnificant parameter, we can see, that only age is significant"),
+              p(
+                "If we only choose the two most sicnificant parameter, we can see, that only age is significant"
+              ),
               verbatimTextOutput("h2_only_two_parameter"),
               br(),
               h4("4. Final assessment of the hypothesis"),
@@ -183,214 +202,280 @@ ui <-
                 "The hypothesis is not confirmed. The parameter age is significant, but age cannot be viewed as a real comorbidity. All other commorbities seems to be not significant, whether someone is dying after a heart failure or not."
               )
               
-            )),
-          tabPanel(
-            "Hypothesis 3",
-            wellPanel(
-              h3(
-                "Hypothesis 3: There are other comorbidities which feature significantly in survival."
-              ),
-              br(),
-              h4("1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"),
-              verbatimTextOutput("h3_summary_lm_all")
-            )),
+            )
+          ),
+          tabPanel("Hypothesis 3",
+                   wellPanel(
+                     h3(
+                       "Hypothesis 3: There are other comorbidities which feature significantly in survival."
+                     ),
+                     br(),
+                     h4(
+                       "1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"
+                     ),
+                     verbatimTextOutput("h3_summary_lm_all")
+                   )),
           tabPanel("Hypothesis 4",
-                   wellPanel(
-                     
-                   )),
-          tabPanel("Hypothesis 5", 
-                   wellPanel(
-                   )),
+                   wellPanel()),
+          tabPanel("Hypothesis 5",
+                   wellPanel()),
         )
       ),
-      tabPanel("Age",
-               h3("Percentage death rate within an age group"),
-               br(),
-               sidebarPanel(
-                 sliderInput(inputId = "min_age", label = "Minimum age:", value = min_age, min = min_age, 
-                             max = max_age, sep = ""),
-                 sliderInput(inputId = "max_age", label = "Maximum age:", value = max_age, min = min_age, 
-                             max = max_age, sep = ""),
-                 selectInput(
-                   inputId = "chart_type",
-                   label = "Chart type:",
-                   choices = c("Pie chart", "Waffle chart") ,
-                   selected = "Pie chart"
-                 )
-               ),
-               mainPanel(
-                 wellPanel(
-                   plotOutput("age_chart"),
-                 )),
-               br(),
-               h3("Effect of patient age on dying"),
-               wellPanel(
-                 plotOutput("curve_age_dying")
-                 
-               ))
+      tabPanel(
+        "Age",
+        h3("Percentage death rate within an age group"),
+        br(),
+        sidebarPanel(
+          sliderInput(
+            inputId = "min_age",
+            label = "Minimum age:",
+            value = min_age,
+            min = min_age,
+            max = max_age,
+            sep = ""
+          ),
+          sliderInput(
+            inputId = "max_age",
+            label = "Maximum age:",
+            value = max_age,
+            min = min_age,
+            max = max_age,
+            sep = ""
+          ),
+          selectInput(
+            inputId = "chart_type",
+            label = "Chart type:",
+            choices = c("Pie chart", "Waffle chart") ,
+            selected = "Pie chart"
+          )
+        ),
+        mainPanel(wellPanel(plotOutput("age_chart"),)),
+        br(),
+        h3("Effect of patient age on dying"),
+        wellPanel(plotOutput("curve_age_dying")),
+        br(),
+        h3("Effect of patient age on the length of the hospitalisation"),
+        sidebarPanel(
+          radioButtons(
+          inputId = "radio",
+          label = "Shwon data:",
+          choices = list(
+            "both" = 1,
+            "alive" = 2,
+            "death" = 3
+          ),
+          selected = 1
+        )),
+        mainPanel(wellPanel(plotOutput("age_los_chart")))
+        
+      )
     )
   )
-
-server <- function(input, output, session) {
-  output$heatmap <- renderPlot({
-    palette = colorRampPalette(c("green", "white", "red"))(20)
-    title <- "Heatmap with correlations"
-    heatmap(
-      x = subset(dataset_correlations, select = -id),
-      col = palette,
-      symm = TRUE,
-      main =  title,
-      scale = "column",
-      Colv = NA,
-      Rowv = NA,
-      mar = c(7, 2)
-    )
-    legend(
-      x = "bottomright",
-      legend = c("low", "middle", "high"),
-      fill = c("green", "white", "red")
-    )
-  })
-  
-  output$death_correlations <- renderPlot({
-    correlation <- dataset_correlations[, 'death']
-    col <- colnames(dataset)
-    death_correlations <- tibble(col, correlation)
     
-    ggplot(data = death_correlations) + geom_point(aes(x = col, y = correlation)) +
-      geom_hline(yintercept = 0,
-                 color = "blue",
-                 size = 2) +
-      theme(axis.text.x = element_text(
-        angle = 90,
-        vjust = 0.5,
-        hjust = 1
-      )) +
-      ggtitle("Correlations with death")
-  })
-  
-  output$description <- renderTable(parameter_description)
-  
-  output$structure <- renderPrint(str(dataset))
-  
-  output$data <- renderTable(dataset)
-  
-  output$single_parameter <-
-    renderPrint(summary(lm(death ~ unlist(
-      dplyr::select(dataset, input$single_parameter)
-    ), data = dataset)))
-  
-  output$single_description <-
-    renderPrint(toString(parameter_description$description[parameter_description$parameter ==
-                                                             input$single_parameter]))
-  
-  output$summary <- renderPrint(
-    summary(dataset),
-    quoted = FALSE,
-    width = getOption("width"),
-    outputArgs = list()
-  )
-  
-  output$gender_plot_1 <- renderPlot({
-    ggplot(heart.failure, aes(x = death)) +
-      geom_bar(aes(fill = gender)) +
-      labs(title = "Proportion of gender in patient status", x = "Patient Status", y = "# of Cases") +
-      scale_x_discrete(labels = c("Alive", "Dead")) +
-      scale_fill_manual(name = "Gender", labels = c("Male", "Female"), values = c("cornflowerblue", "hotpink"))
-  })
-  
-  output$gender_CrossTable <- renderPrint(
-    CrossTable(
-      heart.failure$gender,
-      heart.failure$death,
-      fisher = T,
-      chisq = T,
-      expected = T,
-      sresid = T,
-      format = "SPSS"
-    )
-  )
-  
-  output$gender_linearModel <-
-    renderPrint(summary(lm(death ~ gender, data = dataset)))
-  
-  output$h2_summary_lm_all <-
-    renderPrint(
-      summary(log.model)
-    )
-  
-  output$h2_parameters_favor_fatal <-
-    renderPrint(
-      names(for_death)
-    )
-  
-  output$h2_signifigant_parameter <-
-    renderPrint(
-      summary(h2.model)
-    )
-  
-  output$h2_only_two_parameter <-
-    renderPrint(
-      summary(h2.model.2)
-    )
-  
-  output$curve_age_dying <-
-    renderPlot({
-      ggplot(heart.failure, aes(x = age, y = as.numeric(death) - 1)) +
-        geom_point(alpha = 0.25) +
-        stat_smooth(method = "glm", aes(color = "red"), se = T, fullrange = T, method.args = list(family = binomial)) +
-        theme(legend.position = "none") +
-        labs(title = "Effect of Patient Age on dying", x = "Patient Age (in years)", y = "Chance of Death") +
-        scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + xlim(0, 150)
-    })
-  
-  output$age_chart <-
-    renderPlot({
-      mytitle <-
-        paste(
-          "Percentage death rate within the age group from",
-          input$min_age,
-          "to",
-          input$max_age
+    server <- function(input, output, session) {
+      output$heatmap <- renderPlot({
+        palette = colorRampPalette(c("green", "white", "red"))(20)
+        title <- "Heatmap with correlations"
+        heatmap(
+          x = subset(dataset_correlations, select = -id),
+          col = palette,
+          symm = TRUE,
+          main =  title,
+          scale = "column",
+          Colv = NA,
+          Rowv = NA,
+          mar = c(7, 2)
         )
-      if(input$chart_type == "Pie chart"){
-      ggplot(data = data.frame(group = c("alive","death"), value = c(length(dataset$id[dataset$age >= input$min_age & dataset$age <= input$max_age & dataset$death == 0]), 
-                                                                     length(dataset$id[dataset$age >= input$min_age & dataset$age <= input$max_age & dataset$death == 1]))),
-             aes(x="", y=value, fill=group)) +
-        geom_bar(stat="identity", width=1) +
-        coord_polar("y", start=0) +
-        labs(title = mytitle, x = "", y = "") +
-        scale_fill_brewer(palette = "Dark2") +
-        geom_label_repel(
-          aes(label = c(
-            length(dataset$id[dataset$age >= input$min_age &
-                                dataset$age <= input$max_age & dataset$death == 0]),
-            length(dataset$id[dataset$age >= input$min_age &
-                                dataset$age <= input$max_age &
-                                dataset$death == 1])
-          )),
-          size = 5,
-          show.legend = F,
-          nudge_x = 1
-        ) +
-        guides(fill = guide_legend(title = ""))
-      }else{
-          values <-
-            c(length(dataset$id[dataset$age >= input$min_age &
-                                  dataset$age <= input$max_age & dataset$death == 0]),
-              length(dataset$id[dataset$age >= input$min_age &
-                                  dataset$age <= input$max_age & dataset$death == 1]))
-          names <- c("alive", "death")
-          named_vector <-setNames(values, names)
-          waffle::waffle(named_vector, colors = c("seagreen", "chocolate")) +
+        legend(
+          x = "bottomright",
+          legend = c("low", "middle", "high"),
+          fill = c("green", "white", "red")
+        )
+      })
+      
+      output$death_correlations <- renderPlot({
+        correlation <- dataset_correlations[, 'death']
+        col <- colnames(dataset)
+        death_correlations <- tibble(col, correlation)
+        
+        ggplot(data = death_correlations) + geom_point(aes(x = col, y = correlation)) +
+          geom_hline(yintercept = 0,
+                     color = "blue",
+                     size = 2) +
+          theme(axis.text.x = element_text(
+            angle = 90,
+            vjust = 0.5,
+            hjust = 1
+          )) +
+          ggtitle("Correlations with death")
+      })
+      
+      output$description <- renderTable(parameter_description)
+      
+      output$structure <- renderPrint(str(dataset))
+      
+      output$data <- renderTable(dataset)
+      
+      output$single_parameter <-
+        renderPrint(summary(lm(death ~ unlist(
+          dplyr::select(dataset, input$single_parameter)
+        ), data = dataset)))
+      
+      output$single_description <-
+        renderPrint(toString(parameter_description$description[parameter_description$parameter ==
+                                                                 input$single_parameter]))
+      
+      output$summary <- renderPrint(
+        summary(dataset),
+        quoted = FALSE,
+        width = getOption("width"),
+        outputArgs = list()
+      )
+      
+      output$gender_plot_1 <- renderPlot({
+        ggplot(heart.failure, aes(x = death)) +
+          geom_bar(aes(fill = gender)) +
+          labs(title = "Proportion of gender in patient status", x = "Patient Status", y = "# of Cases") +
+          scale_x_discrete(labels = c("alive", "dead")) +
+          scale_fill_manual(
+            name = "Gender",
+            labels = c("Male", "Female"),
+            values = c("cornflowerblue", "hotpink")
+          )
+      })
+      
+      output$gender_CrossTable <- renderPrint(
+        CrossTable(
+          heart.failure$gender,
+          heart.failure$death,
+          fisher = T,
+          chisq = T,
+          expected = T,
+          sresid = T,
+          format = "SPSS"
+        )
+      )
+      
+      output$gender_linearModel <-
+        renderPrint(summary(lm(death ~ gender, data = dataset)))
+      
+      output$h2_summary_lm_all <-
+        renderPrint(summary(log.model))
+      
+      output$h2_parameters_favor_fatal <-
+        renderPrint(names(for_death))
+      
+      output$h2_signifigant_parameter <-
+        renderPrint(summary(h2.model))
+      
+      output$h2_only_two_parameter <-
+        renderPrint(summary(h2.model.2))
+      
+      output$curve_age_dying <-
+        renderPlot({
+          ggplot(heart.failure, aes(x = age, y = as.numeric(death) - 1)) +
+            geom_point(alpha = 1) +
+            stat_smooth(
+              method = "glm",
+              aes(color = "red"),
+              se = T,
+              fullrange = T,
+              method.args = list(family = binomial)
+            ) +
+            theme(legend.position = "none") +
+            labs(title = "Effect of patient age on dying", x = "Patient age (in years)", y = "Chance of death") +
+            scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + xlim(0, 150)
+        })
+      
+      output$age_los_chart <-
+        renderPlot({
+          if(input$radio == 2){
+          heart.failure = heart.failure[heart.failure$death == 0, ]
+          values = c("seagreen")
+          labels = c("alive")
+          }
+          else if(input$radio == 3){
+          heart.failure = heart.failure[heart.failure$death == 1, ]
+          values = c("chocolate")
+          labels = c("dead")
+          }
+          else{
+            values = c("seagreen", "chocolate")
+            labels = c("alive", "dead")
+          }
+          ggplot(heart.failure, aes(x = age, y = los, color = death)) +
+            geom_point(alpha = 1, size = 2) +
+            scale_color_manual(
+              values = values,
+              labels = labels,
+              name = ""
+            ) +
+            stat_smooth(
+              method = "lm",
+              aes(color = death),
+              se = F,
+              fullrange = F
+            ) +
             theme(legend.position = "right") +
-            labs(title = mytitle, x = "", y = "")
-      }
-    })
-  
-  observe(updateSliderInput(session, "max_age", min = input$min_age))
-
-}
-
-
-shinyApp(ui, server)
+            labs(title = "Effect of patient age on the length of the hospitalisation", x = "Patient age (in years)", y = "Length of hospitalisation (in nights)")
+        })
+      
+      output$age_chart <-
+        renderPlot({
+          mytitle <-
+            paste(
+              "Percentage death rate within the age group from",
+              input$min_age,
+              "to",
+              input$max_age
+            )
+          if (input$chart_type == "Pie chart") {
+            ggplot(data = data.frame(
+              group = c("alive", "dead"),
+              value = c(length(dataset$id[dataset$age >= input$min_age &
+                                            dataset$age <= input$max_age & dataset$death == 0]),
+                        length(dataset$id[dataset$age >= input$min_age &
+                                            dataset$age <= input$max_age & dataset$death == 1]))
+            ),
+            aes(x = "", y = value, fill = group)) +
+              geom_bar(stat = "identity", width = 1) +
+              coord_polar("y", start = 0) +
+              labs(title = mytitle, x = "", y = "") +
+              scale_fill_brewer(palette = "Dark2") +
+              geom_label_repel(
+                aes(label = c(
+                  length(dataset$id[dataset$age >= input$min_age &
+                                      dataset$age <= input$max_age &
+                                      dataset$death == 0]),
+                  length(dataset$id[dataset$age >= input$min_age &
+                                      dataset$age <= input$max_age &
+                                      dataset$death == 1])
+                )),
+                size = 5,
+                show.legend = F,
+                nudge_x = 1
+              ) +
+              guides(fill = guide_legend(title = ""))
+          } else{
+            values <-
+              c(length(dataset$id[dataset$age >= input$min_age &
+                                    dataset$age <= input$max_age &
+                                    dataset$death == 0]),
+                length(dataset$id[dataset$age >= input$min_age &
+                                    dataset$age <= input$max_age &
+                                    dataset$death == 1]))
+            names <- c("alive", "dead")
+            named_vector <- setNames(values, names)
+            waffle::waffle(named_vector, colors = c("seagreen", "chocolate")) +
+              theme(legend.position = "right") +
+              labs(title = mytitle, x = "", y = "")
+          }
+        })
+      
+      observe(updateSliderInput(session, "max_age", min = input$min_age))
+      
+    }
+    
+    
+    shinyApp(ui, server)
+    
