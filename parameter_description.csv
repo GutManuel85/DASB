@@ -1,5 +1,5 @@
 parameter,description,;;;;
-death,0 = alive ; 1 = death,;;;
+death,0 = alive ; 1 = dead,;;;
 los,hospital length of stay in nights,;;;;
 age,in years,;;;;
 gender,1=male; 2=female,;;;
