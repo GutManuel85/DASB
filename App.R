@@ -86,6 +86,10 @@ h3.model.2 <-
   glm(death ~ cabg * mental_health,
       data = dataset,
       family = binomial())
+grouped_number <- dataset %>% group_by(prior_dnas, death) %>% summarise(count = n())
+
+
+
 ui <-
   fluidPage(
     #Header or Title Panel
@@ -102,6 +106,8 @@ ui <-
         br(),
         br(),
         HTML('<center><img src="hypothesis.png" width="600"></center>'),
+        br(),
+        br(),
       ),
       tabPanel(
         "Data",
@@ -150,7 +156,7 @@ ui <-
                                 for men and women."
               ),
               br(),
-              h4("1. To test the hypothesis, let's make a first plot"),
+              h4("1. To test the hypothesis, let's create a first plot"),
               br(),
               plotOutput("gender_plot_1"),
               br(),
@@ -177,7 +183,7 @@ ui <-
               br(),
               h4("4. Final assessment of the hypothesis"),
               p(
-                "The hypothesis is confirmed. Thus, gender does not matter whether one survive a heart attack or not"
+                "The hypothesis is confirmed. Thus, gender does not matter whether one survive a heart failure or not."
               )
             )
           ),
@@ -197,13 +203,13 @@ ui <-
               verbatimTextOutput("h2_parameters_favor_fatal"),
               br(),
               h4("3. Let's check, which of these parameters are significant"),
-              verbatimTextOutput("h2_signifigant_parameter"),
+              verbatimTextOutput("h2_significant_parameter"),
               p(
                 "According to the modell, 'los' and 'age' are quite signficant, 'metastatic_cancer' and 'prior_dnas' are somewhat significant and 'dementia' and 'senile' are barely significant."
               ),
               br(),
               p(
-                "If we only choose the two most sicnificant parameter, we can see, that only age is significant"
+                "If we only choose the two most sicnificant parameter, we can see, that only age is significant."
               ),
               verbatimTextOutput("h2_only_two_parameter"),
               br(),
@@ -230,14 +236,15 @@ ui <-
               verbatimTextOutput("h3_parameters_favor_survival"),
               br(),
               h4("3. Let's check, which of these parameters are significant"),
-              verbatimTextOutput("h3_signifigant_parameter"),
+              verbatimTextOutput("h3_significant_parameter"),
               p(
                 "According to the modell, 'cabg' is somewhat significant and 'mental health' is barely significant."
               ),
               br(),
               p(
-                "If we only choose the two sicnificant parameter, we can see, that 'cabg' and 'mental health' are somewhat significant."
+                "If we only choose the two significant parameter, we can see, that 'cabg' and 'mental health' are somewhat significant."
               ),
+              br(),
               p(
                 "Explanation of cabg: cabg shows whether someone already has a bypass or not. With '1' the patient has a bypass, with '0' not."
               ),
@@ -247,17 +254,17 @@ ui <-
               
               verbatimTextOutput("h3_only_two_parameter"),
               p(
-                "This analysis shows the same picture. Let's make a crosstable to have a final analysis"
+                "This analysis shows the same picture. Let's create a crosstable to have a final analysis."
               ),
               br(),
               h4("4. Crosstables"),
-              p("Let's start with the crosstable for cabg"),
+              p("Let's start with the crosstable for cabg."),
               verbatimTextOutput("h3_crosstable_cabg"),
               p(
                 "The table shows that the chance of survival with 92.9% in the group of patients with a by-pass is significantly higher than in the group with patients without a py-pass (50.2% chance of survival). The Chi-square-test confirms the significance too due to the fact, that the p-value is less than 0.01."
               ),
               br(),
-              p("Let's do the same for mental_health"),
+              p("Let's do the same for mental_health."),
               verbatimTextOutput("h3_crosstable_mental_health"),
               p(
                 "The table shows that the chance of survival with 60.7% in the group of patients with a mental illness is about 11% higher than in the group with patients without a mental illness (49.3% chance of survival)."
@@ -272,41 +279,81 @@ ui <-
               )
             )
           ),
-          tabPanel("Hypothesis 4",
-                   wellPanel(
-                     h3(
-                       "Hypothesis 4: A longer follow-up time has a positive effect on survival"
-                     ),
-                     h4("1. Data"),
-                     p(
-                       "Explination of parameter fu_time: follow up time (time spent monitoring the patients health after treatment)"
-                     ),
-                     br(),
-                     p(
-                       "Unfortunately, our dataset has 652 rows without a value (NA) in the column 'fu_time. Therefore, fu_time is not a good predictor. Nevertheless, we will make a short analysis with a linear model"
-                     ),
-                     br(),
-                     h4("2. Linear model"),
-                     verbatimTextOutput("h4_lm"),
-                     p("The linear model shows, that there is a high significance. Therefore, we will make a plot of the linear model."),
-                     br(),
-                     h4("3. Plot"),
-                     p("The linear model shows, that the risk for dying decreases when the fu_time increases."),
-                     plotOutput("h4_plot"),
-                     br(),
-                     h4("4. Final assessment of the hypothesis"),
-                     p(
-                       "The hypothesis seems to be confirmed. But we have to be carful here. On the one hand, more than 60% of the data is missing. On the other hand, we have to ask ourselves what is cause and what is consequence. If a patient dies very quickly, the follow-up time is of course very short. Possibly a short follow-up time is more the consequence than the cause of a fatal outcome."
-                     )
-                     
-                   )),
-          tabPanel("Hypothesis 5",
-                   wellPanel(
-                     h3(
-                       "Hypothesis 5: Missing fewer outpatient appoitments has a positive effect on survival"
-                     )
-                     
-                   )),
+          tabPanel(
+            "Hypothesis 4",
+            wellPanel(
+              br(),
+              h3(
+                "Hypothesis 4: A longer follow-up time has a positive effect on survival"
+              ),
+              br(),
+              h4("1. Data"),
+              p(
+                "Explination of parameter fu_time: follow up time (time spent monitoring the patients health after treatment)"
+              ),
+              br(),
+              h4("2. Reuse  the analysis of hypothesis 3"),
+              p(
+                "As we have seen in the analysis of hypothesis 3, there is only the parameter 'cabg', which has a significant positive influence on the chance of survival. Below is the linear model again."
+              ),
+              verbatimTextOutput("h4_significant_parameter"),
+              br(),
+              h4("4. Final assessment of the hypothesis"),
+              p(
+                "On the one hand, the linear model of hypothesis 3 shows, that the hypothesis is not confirmed. On the other hand, we have to ask ourselves what is cause and what is consequence. If a patient dies very quickly, the follow-up time is of course very short. Possibly a short follow-up time is more the consequence than the cause of a fatal outcome."
+              )
+            )
+          ),
+          tabPanel(
+            "Hypothesis 5",
+            wellPanel(
+              h3(
+                "Hypothesis 5: Missing fewer outpatient appoitments has a positive effect on survival"
+              ),
+              br(),
+              h4("1. Data"),
+              p(
+                "Explination of parameter prior_dnas: number of outpatient appointments missed in the previous year"
+              ),
+              br(),
+              h4("2. Reuse  the analysis of hypothesis 3"),
+              p(
+                "As we have seen in the analysis of hypothesis 3, there is only the parameter 'cabg', which has a significant positive influence on the chance of survival. Below is the linear model again."
+              ),
+              verbatimTextOutput("h5_significant_parameter"),
+              br(),
+              p(
+                "If we have a look at the analysis of hypothesis 2, we can see, that missed appointments have a negative effect on survival."
+              ),
+              verbatimTextOutput("h5_significant_parameter_2"),
+              br(),
+              h4("3. Further analysis"),
+              p(
+                "Now, we take all parameters with a significance tag from the model above and create a new linear model with those parameters"
+              ),
+              verbatimTextOutput("h5_significant_parameter_3"),
+              p(
+                "Further, we will look at the linear model, if we use only the most significant parameter 'age' and the parameter 'prior_dnas'."
+              ),
+              verbatimTextOutput("h5_significant_parameter_4"),
+              p("Here, we can see that 'prior_dnas' is still significant."),
+              p(
+                "Finally, we will plot the correlation between 'death' and 'prior_dnas'."
+              ),
+              plotOutput("h5_plot"),
+              p("As one can see, the graph increases with the number of missed appointments, what further supports our hypothesis."),
+              br(),
+              h4("4. Final assessment of the hypothesis"),
+              p("Our hypothesis seems to be confirmed, so that missed appointments have a negativ effect on survival.")
+            )
+          ),
+          tabPanel(
+            "Summary of the results",
+              h3("Results of the analysis summarized"),
+              HTML('<left><img src="confirmed.png" width="600"></left>'),
+            br(),
+            br(),
+          )
         )
       ),
       tabPanel(
@@ -454,7 +501,7 @@ server <- function(input, output, session) {
   output$h2_parameters_favor_fatal <-
     renderPrint(names(for_death))
   
-  output$h2_signifigant_parameter <-
+  output$h2_significant_parameter <-
     renderPrint(summary(h2.model))
   
   output$h2_only_two_parameter <-
@@ -466,7 +513,7 @@ server <- function(input, output, session) {
   output$h3_parameters_favor_survival <-
     renderPrint(names(for_survival))
   
-  output$h3_signifigant_parameter <-
+  output$h3_significant_parameter <-
     renderPrint(summary(h3.model))
   
   output$h3_only_two_parameter <-
@@ -485,6 +532,57 @@ server <- function(input, output, session) {
       )
     )
   
+  output$h4_significant_parameter <-
+    renderPrint(summary(h3.model))
+  
+  output$h5_significant_parameter <-
+    renderPrint(summary(h3.model))
+  
+  output$h5_significant_parameter_2 <-
+    renderPrint(summary(h2.model))
+  
+  output$h5_significant_parameter_3 <-
+    renderPrint(summary(
+      lm(
+        death ~ los + age + dementia + metastatic_cancer + prior_dnas + senile,
+        data = dataset
+      )
+    ))
+  
+  output$h5_significant_parameter_3 <-
+    renderPrint(summary(
+      lm(
+        death ~ los + age + dementia + metastatic_cancer + prior_dnas + senile,
+        data = dataset
+      )
+    ))
+  
+  output$h5_significant_parameter_4 <-
+    renderPrint(summary(lm(death ~ age + prior_dnas, data = dataset)))
+  
+  output$h5_plot <-
+    renderPlot(
+      ggplot() +
+        geom_point(
+          data = grouped_number,
+          aes(x = prior_dnas, y = as.numeric(death), size = grouped_number$count)
+        ) +
+        geom_smooth(
+          data = dataset,
+          method = "glm",
+          se = F,
+          fullrange = T,
+          method.args = list(family = binomial),
+          formula = y ~ x,
+          aes(x = prior_dnas, y = as.numeric(death))
+        ) +
+        ylab("death") + xlim(0, 10) + ylim(0, 1) +
+        theme(legend.position = "right", legend.title = element_blank()) +
+        scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10)) +
+        scale_y_continuous(breaks = c(0,1))
+    )
+  
+  
   output$h3_crosstable_mental_health <-
     renderPrint(
       CrossTable(
@@ -498,17 +596,6 @@ server <- function(input, output, session) {
       )
     )
   
-  output$h4_lm <-
-    renderPrint(summary(lm(death ~ fu_time, data = dataset_without_NA)))
-  
-  output$h4_plot <-
-    renderPlot({
-      ggplot(dataset_without_NA, aes(x = fu_time, y = as.numeric(death))) +
-        geom_point(alpha = 0.5) +
-        geom_smooth(method = "glm", se = F, fullrange = T, method.args = list(family = binomial), formual = y ~ x) +
-        ylab("Death") + xlim(-100, 1500)
-      
-    })
   
   output$curve_age_dying <-
     renderPlot({
