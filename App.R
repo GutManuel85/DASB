@@ -1,9 +1,18 @@
+# https://www.kaggle.com/jackleenrasmybareh/heart-failure
 # https://shiny.rstudio.com/gallery/
 # https://www.youtube.com/watch?v=9uFQECk30kA
 # https://www.youtube.com/watch?v=u8KCw3VtFW8
+# https://shiny.rstudio.com/reference/shiny/1.6.0/renderTable.html
 # https://stackoverflow.com/questions/34663099/how-to-center-an-image-in-a-shiny-app
 # https://www.r-graph-gallery.com/215-the-heatmap-function.html
 # https://www.datanovia.com/en/blog/ggplot-colors-best-tricks-you-will-love/
+# https://heima.hafro.is/~einarhj/education/ggplot2/scales.html
+# https://community.rstudio.com/t/need-help-with-error-when-running-geom-smooth-using-formula-y-x/92890
+# https://bookdown.org/yih_huynh/Guide-to-R-Book/graphing-with-different-datasets.html
+# https://bookdown.org/yih_huynh/Guide-to-R-Book/graphing-with-different-datasets.html
+# https://stackoverflow.com/questions/20251119/increase-the-size-of-variable-size-points-in-ggplot2-scatter-plot
+# https://stackoverflow.com/questions/34638902/point-size-in-ggplot-2-0-0
+# https://stackoverflow.com/questions/25293045/count-number-of-rows-in-a-data-frame-in-r-based-on-group
 
 library(readr)
 library(datasets)
@@ -450,7 +459,7 @@ server <- function(input, output, session) {
   
   output$structure <- renderPrint(str(dataset))
   
-  output$data <- renderTable(dataset)
+  output$data <- renderTable(dataset, digits = 0)
   
   output$single_parameter <-
     renderPrint(summary(lm(death ~ unlist(
