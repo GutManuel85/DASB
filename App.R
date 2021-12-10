@@ -124,7 +124,6 @@ ui <-
           type = "tab",
           tabPanel("Description", wellPanel(tableOutput("description"))),
           tabPanel("Summary", verbatimTextOutput("summary")),
-          tabPanel("Structure", verbatimTextOutput("structure")),
           tabPanel(" Show data",
                    tableOutput("data"),)
         )
@@ -137,19 +136,6 @@ ui <-
                  plotOutput("death_correlations")
                )),
       
-      tabPanel(
-        "Significance",
-        sidebarPanel(
-          selectInput(
-            inputId = "single_parameter",
-            label = "Parameter:",
-            choices = colnames(dataset),
-            selected = "age"
-          ),
-          verbatimTextOutput("single_description")
-        ),
-        mainPanel(verbatimTextOutput("single_parameter"))
-      ),
       tabPanel(
         "Results",
         HTML('<left><img src="hypothesis.png" width="575"></left>'),
@@ -184,10 +170,10 @@ ui <-
                 "Here the Chi^2 statistic is smaller than the critical values and the p value is far over 0.05 so we can conclude that the variable are independent. I.e. there is no relationship between gender and survival/death which is supported by the bar plot above."
               ),
               br(),
-              h4("3. Lets make a last proof with a linear model"),
+              h4("3. Lets make a last proof with a logistic linear model"),
               verbatimTextOutput("gender_linearModel"),
               p(
-                "The summary of the linear modell shows that the p-value of 0.837 is much larger than 0.001. Thus, the linear model also shows that gender is not significant in relation to death."
+                "The summary of the logistic linear model shows that the p-value of 0.837 is much larger than 0.001. Thus, the linear model also shows that gender is not significant in relation to death."
               ),
               br(),
               h4("4. Final assessment of the hypothesis"),
@@ -342,7 +328,7 @@ ui <-
               ),
               verbatimTextOutput("h5_significant_parameter_3"),
               p(
-                "Further, we will look at the linear model, if we use only the most significant parameter 'age' and the parameter 'prior_dnas'."
+                "Furthermore, we consider the linear model if we only use the most significant parameter 'age' and the parameter 'prior_dnas'."
               ),
               verbatimTextOutput("h5_significant_parameter_4"),
               p("Here, we can see that 'prior_dnas' is still significant."),
@@ -457,18 +443,7 @@ server <- function(input, output, session) {
   
   output$description <- renderTable(parameter_description)
   
-  output$structure <- renderPrint(str(dataset))
-  
   output$data <- renderTable(dataset, digits = 0)
-  
-  output$single_parameter <-
-    renderPrint(summary(lm(death ~ unlist(
-      dplyr::select(dataset, input$single_parameter)
-    ), data = dataset)))
-  
-  output$single_description <-
-    renderPrint(toString(parameter_description$description[parameter_description$parameter ==
-                                                             input$single_parameter]))
   
   output$summary <- renderPrint(
     summary(dataset),
@@ -502,7 +477,7 @@ server <- function(input, output, session) {
   )
   
   output$gender_linearModel <-
-    renderPrint(summary(lm(death ~ gender, data = dataset)))
+    renderPrint(summary(glm(death ~ gender, data = dataset, family = binomial())))
   
   output$h2_summary_lm_all <-
     renderPrint(summary(log.model))
@@ -552,22 +527,14 @@ server <- function(input, output, session) {
   
   output$h5_significant_parameter_3 <-
     renderPrint(summary(
-      lm(
+      glm(
         death ~ los + age + dementia + metastatic_cancer + prior_dnas + senile,
-        data = dataset
-      )
-    ))
-  
-  output$h5_significant_parameter_3 <-
-    renderPrint(summary(
-      lm(
-        death ~ los + age + dementia + metastatic_cancer + prior_dnas + senile,
-        data = dataset
+        data = dataset, family = binomial()
       )
     ))
   
   output$h5_significant_parameter_4 <-
-    renderPrint(summary(lm(death ~ age + prior_dnas, data = dataset)))
+    renderPrint(summary(glm(death ~ age + prior_dnas, data = dataset, family = binomial())))
   
   output$h5_plot <-
     renderPlot(
