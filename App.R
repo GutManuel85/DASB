@@ -147,7 +147,8 @@ ui <-
                  br(),
                  plotOutput("heatmap"),
                  br(),
-                 plotOutput("death_correlations")
+                 plotOutput("death_correlations"),
+                 linebreaks(2)
                )),
       
       tabPanel(
@@ -162,7 +163,7 @@ ui <-
             wellPanel(
               h3(
                 "Hypothesis: There is no significant difference in survival
-                                for men and women."
+                                for men and women"
               ),
               br(),
               h4("To test the hypothesis, let's create a first plot"),
@@ -200,10 +201,10 @@ ui <-
             "Hypothesis 2 & 3",
             wellPanel(
               h3(
-                "Hypothesis 2: There are comorbidities which feature significantly in fatalities."
+                "Hypothesis 2: There are comorbidities which feature significantly in fatalities"
               ),
               h3(
-                "Hypothesis 3: There are other comorbidities which feature significantly in survival."
+                "Hypothesis 3: There are other comorbidities which feature significantly in survival"
               ),
               br(),
               h4(
@@ -228,7 +229,7 @@ ui <-
               ),
               wellPanel(
                 p(
-                  "Let's compare the AIC of the different models created with the different methods."
+                  "Let's compare the AIC-values of the different models created with the different methods."
                 ),
                 p("Backwards:"),
                 verbatimTextOutput("h2_backwards"),
@@ -237,7 +238,7 @@ ui <-
                 p("Both ways:"),
                 verbatimTextOutput("h2_bothways"),
                 p(
-                  "The AIC of all three models is 1174.165, so all three approaches seem to have resulted in the same model."
+                  "The AIC-value of all three models is 1174.165, so all three approaches seem to have resulted in the same model."
                 )
               ),
               wellPanel(
@@ -316,30 +317,30 @@ ui <-
               br(),
               h4("Data"),
               p(
-                "Explination of parameter fu_time: follow up time (time spent monitoring the patients health after treatment)"
+                "Explanation of parameter fu_time: follow up time (time spent monitoring the patients health after treatment)"
               ),
               p(
-                "Explination of parameter los: length of stay (nights spent at the hospital)"
+                "Explanation of parameter los: length of stay (nights spent at the hospital)"
               ),
               br(),
               h4("Reuse  the analysis of hypothesis 2 & 3"),
               p(
-                "As we have seen in the analysis of hypothesis 2 & 3, the parameter fu_time does not have a significant effect on the chance of survival."
+                "As we have seen in the analysis of hypothesis 2 & 3, the parameter fu_time does not have a significant effect on the chance of survival. Below the paramater which are part of the model:"
               ),
               verbatimTextOutput("h4_remaining"),
               p("Therefore, we will have a look at the parameter 'los' instead."),
               br(),
               h4("Predictor 'los'"),
-              p("First of all, we will have a look at the AIC value of 'los'"),
+              p("First of all, we will have a look at the AIC-value of 'los'."),
               verbatimTextOutput("h4_los_summary"),
               p(
-                "As we can see, the AIC value 1304.2 is better than the value of 'Null deviance'. Therefore, we will do some further analysis."
+                "As we can see, the AIC-value 1304.2 is better than the value of 'Null deviance'. Therefore, we will do some further analysis."
               ),
               p("Lets plot the regression graph:"),
               plotOutput("h4_los_plot"),
               br(),
               p(
-                "As we can see, to have a long stay in hospital seems to have a negative effect on the chance of survival. But we have to concider to aspects here. On the one hand, the plot shows that the confidence bands around the predictor are quite large, so 'los' alone is not a very good predictor of patient mortality. On the other hand, we have to ask, wheter the length of stay is more effect or more consequence of a fatale outcome."
+                "As we can see, staying in hospital for a long time seems to have a negative effect on the chance of survival. But we have to concider two aspects here. On the one hand, the plot shows that the confidence bands around the predictor are quite large, so 'los' alone is not a very good predictor of patient mortality. On the other hand, we have to ask wheter the length of stay is more effect or more consequence of a fatale outcome."
               ),
               br(),
               h4("Combination of 'los' and 'age'"),
@@ -362,16 +363,15 @@ ui <-
               p(
                 "As we can see in the plot above, the length of stay and the age seems to have a correlation. The older the patient, the longer the stay. Especially in cases where the patient survives."
               ),
-              p("We will check this with a new model."),
+              p("We will check this with a further model."),
               verbatimTextOutput("h4_interaction"),
-              br(),
               p(
                 "The model shows, that there is a significant effect. Each year increases the stay by 0.0978 nights in average."
               ),
               br(),
               h4("4. Final assessment of the hypothesis"),
               p(
-                "Our analysis shows, that there is no significant correlation between follow-up time an the chance of survival. Therefore, the hypothesis 4 is not confirmed. But we could show, that there is a negative correleation between length of stay and chance of survival."
+                "Our analysis shows that there is no significant correlation between follow-up time an the chance of survival. Therefore, the hypothesis 4 is not confirmed. But we could show that there is a negative correleation between length of stay and chance of survival."
               ),
             ),
           ),
@@ -399,11 +399,12 @@ ui <-
               h4("Plot of the correlation"),
               p("We will plot the correlation between 'death' and 'prior_dnas'."),
               plotOutput("h5_plot"),
+              br(),
               p(
                 "As one can see, the graph increases with the number of missed appointments, what further supports our hypothesis."
               ),
               br(),
-              h4("4. Final assessment of the hypothesis"),
+              h4("Final assessment of the hypothesis"),
               p(
                 "Our hypothesis seems to be confirmed, so that missed appointments have a negativ effect on survival."
               ),
