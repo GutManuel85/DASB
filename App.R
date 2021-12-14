@@ -29,13 +29,15 @@ library(ggrepel)
 library(waffle)
 
 rm(list = ls())
+
 dataset <- read_csv("dataset_heartFailure.csv")
 dataset_without_NA <- na.omit(dataset)
 dataset_correlations <- cor(dataset_without_NA)
 parameter_description <- read_csv("parameter_description.csv")
 parameter_description <-
   subset(parameter_description, select = c(parameter, description))
-heart.failure <- dataset_without_NA
+heart.failure <- subset(dataset_without_NA, select = -c(ethnicgroup, id))
+
 cols <-
   c(
     "death",
@@ -61,11 +63,39 @@ cols <-
     "pci",
     "stroke",
     "senile",
-    "quintile",
-    "ethnicgroup",
-    "fu_time"
+    "quintile"
   )
+
 heart.failure[cols] <- lapply(heart.failure[cols], factor)
+
+fullmodel <- glm(death ~ ., data = heart.failure, family = binomial())
+
+nullmodel <-
+  glm(death ~ 1, data = heart.failure, family = binomial()) # Null model
+
+backwards <- step(fullmodel, trace = 0)
+
+forwards <-
+  step(
+    nullmodel,
+    scope = list(lower = formula(nullmodel), upper = formula(fullmodel)),
+    direction = "forward",
+    trace = 0
+  )
+
+bothways <-
+  step(
+    nullmodel,
+    scope = list(lower = formula(nullmodel), upper = formula(fullmodel)),
+    direction = "both",
+    trace = 0
+  )
+
+
+
+
+
+
 log.model <-
   glm(
     death ~ los + age + gender + cancer + cabg + crt + defib + dementia + diabetes + hypertension + ihd + mental_health +  arrhythmias + copd + obesity + pvd + renal_disease + metastatic_cancer + pacemaker + pneumonia + prior_appts_attended + prior_dnas + pci + stroke + senile + quintile + fu_time,
@@ -151,7 +181,7 @@ ui <-
                                 for men and women."
               ),
               br(),
-              h4("1. To test the hypothesis, let's create a first plot"),
+              h4("To test the hypothesis, let's create a first plot"),
               br(),
               plotOutput("gender_plot_1"),
               br(),
@@ -160,7 +190,7 @@ ui <-
               ),
               br(),
               h4(
-                "2. To explore the hypothesis even further, we'll use the CrossTable-function"
+                "To explore the hypothesis even further, we'll use the CrossTable-function"
               ),
               p(
                 "The Chi^2 statistic is part of the CrossTable-function and tests whether the two variables are independent. If the test produces a significant result (p less than 0.05 or better 0.01) that is larger than the critical values of the Chi^2 statistic at a certain degree of freedom (with df=1: Chi^2 larger than 3.85 at p=0.05 or larger than 6.63 at p=0.01) we can conclude that there is a significant relationship between the variables."
@@ -170,108 +200,82 @@ ui <-
                 "Here the Chi^2 statistic is smaller than the critical values and the p value is far over 0.05 so we can conclude that the variable are independent. I.e. there is no relationship between gender and survival/death which is supported by the bar plot above."
               ),
               br(),
-              h4("3. Lets make a last proof with a logistic linear model"),
+              h4("Lets make a last proof with a logistic linear model"),
               verbatimTextOutput("gender_linearModel"),
               p(
                 "The summary of the logistic linear model shows that the p-value of 0.837 is much larger than 0.001. Thus, the linear model also shows that gender is not significant in relation to death."
               ),
               br(),
-              h4("4. Final assessment of the hypothesis"),
+              h4("Final assessment of the hypothesis"),
               p(
-                "The hypothesis is confirmed. Thus, gender does not matter whether one survive a heart failure or not."
+                "The distribution of mortality is very similar for men and women. The hypothesis thus seems to be confirmed. However, this does not have to mean that gender has no influence on the chances of survival, as we will see when analyzing hypotheses 2 and 3."
               )
             )
           ),
           tabPanel(
-            "Hypothesis 2",
+            "Hypothesis 2 & 3",
             wellPanel(
               h3(
                 "Hypothesis 2: There are comorbidities which feature significantly in fatalities."
               ),
-              br(),
-              h4(
-                "1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"
-              ),
-              verbatimTextOutput("h2_summary_lm_all"),
-              br(),
-              h4("2. Now, let's have a look, which parameters favor a fatal outcome"),
-              verbatimTextOutput("h2_parameters_favor_fatal"),
-              br(),
-              h4("3. Let's check, which of these parameters are significant"),
-              verbatimTextOutput("h2_significant_parameter"),
-              p(
-                "According to the modell, 'los' and 'age' are quite signficant, 'metastatic_cancer' and 'prior_dnas' are somewhat significant and 'dementia' and 'senile' are barely significant."
-              ),
-              br(),
-              p(
-                "If we only choose the two most sicnificant parameter, we can see, that only age is significant."
-              ),
-              verbatimTextOutput("h2_only_two_parameter"),
-              br(),
-              h4("4. Final assessment of the hypothesis"),
-              p(
-                "The hypothesis is not confirmed. The parameter age is significant, but age cannot be viewed as a real comorbidity. All other commorbities seems to be not significant, whether someone is dying after a heart failure or not."
-              )
-              
-            )
-          ),
-          tabPanel(
-            "Hypothesis 3",
-            wellPanel(
               h3(
                 "Hypothesis 3: There are other comorbidities which feature significantly in survival."
               ),
               br(),
               h4(
-                "1. To test the hypothesis, let's make a first summary of the linear modell with all parameters"
+                "Approach: Looking for the best model step by step to find the significant predictor."
               ),
-              verbatimTextOutput("h3_summary_lm_all"),
-              br(),
-              h4("2. Now, let's have a look, which parameters favor the survival"),
-              verbatimTextOutput("h3_parameters_favor_survival"),
-              br(),
-              h4("3. Let's check, which of these parameters are significant"),
-              verbatimTextOutput("h3_significant_parameter"),
               p(
-                "According to the modell, 'cabg' is somewhat significant and 'mental health' is barely significant."
+                "We want to see what effect each predictor factor has on the outcome of hospitalization (survival or death). So we try a logistic regression with all predictors. In the picture below, one can see, how we chose the model type."
               ),
+              HTML('<left><img src="modeltype.png" width="900"></left>'),
+              br(),
               br(),
               p(
-                "If we only choose the two significant parameter, we can see, that 'cabg' and 'mental health' are somewhat significant."
+                "And below, you can see the logistic regression model with all predictors."
               ),
+              verbatimTextOutput("h2_summary_lm_all"),
               br(),
               p(
-                "Explanation of cabg: cabg shows whether someone already has a bypass or not. With '1' the patient has a bypass, with '0' not."
+                "Our models residual deviance is smaller than the null deviance, so having all parameters in our model gives a better prediction of the outcome of hospitalization than having no parameters in (just random guessing). There are however many parameters that appear to be not significant. So lets try a stepwise logistic regression to find the best combination of parameters to predict survival of patients."
               ),
               p(
-                "Explanation of mental_health: mental_health shows whether someone has mental illnesses. With '1' the patient has mental illnesses, with '0' not."
+                "Let's try to go backward (start with a full model and try removing parameters), forward (the opposite of backward) and both ways!"
               ),
-              
-              verbatimTextOutput("h3_only_two_parameter"),
-              p(
-                "This analysis shows the same picture. Let's create a crosstable to have a final analysis."
+              wellPanel(
+                p(
+                  "Let's compare the AIC of the different models created with the different methods."
+                ),
+                p("Backwards:"),
+                verbatimTextOutput("h2_backwards"),
+                p("Forwards:"),
+                verbatimTextOutput("h2_forwards"),
+                p("Both ways:"),
+                verbatimTextOutput("h2_bothways"),
+                p("The AIC of all three models is 1231.221, so all three approaches seem to have resulted in the same model.")
+              ),
+              wellPanel(
+                p("Let's show the used model, which has the smallest AIC-value:"),
+                verbatimTextOutput("h2_formula_forwards"),
+              ),
+              wellPanel(
+                p("Let's have a look at the predictors of this model"),
+                #verbatimTextOutput("h2_best_model"),
+                p("So what do the numbers mean? For age which is numerical the estimate is 0.07. Each additional year increases the chance of dying by 0.07. For a categorical predictor like gender an estimate of -0.47 means that if the patient is female the chance of dying is decreased by 0.47.")
+              ),
+              wellPanel(
+                p("Lets consider the coefficients/predictors"),
+                verbatimTextOutput("h2_names_coefficients"),
+                p("Lets discard crt, senile and hypertension since their p-Values don't indicate them as significant. The remaining predictors are:"),
+                verbatimTextOutput("h2_remaining"),
               ),
               br(),
-              h4("4. Crosstables"),
-              p("Let's start with the crosstable for cabg."),
-              verbatimTextOutput("h3_crosstable_cabg"),
+              h4("Final assessment of the hypothesis"),
               p(
-                "The table shows that the chance of survival with 92.9% in the group of patients with a by-pass is significantly higher than in the group with patients without a py-pass (50.2% chance of survival). The Chi-square-test confirms the significance too due to the fact, that the p-value is less than 0.01."
+                "The hypothesis 2 and 3 seems to be confirmed. There are comorbidities which feature significantly in fatalities and in survival."
               ),
-              br(),
-              p("Let's do the same for mental_health."),
-              verbatimTextOutput("h3_crosstable_mental_health"),
-              p(
-                "The table shows that the chance of survival with 60.7% in the group of patients with a mental illness is about 11% higher than in the group with patients without a mental illness (49.3% chance of survival)."
-              ),
-              p(
-                "However, the Chi-square-test shows, that mental_health isn't a significant factor because the p-value is bigger than 0.05."
-              ),
-              br(),
-              h4("5. Final assessment of the hypothesis"),
-              p(
-                "The hypothesis is confirmed. The parameter cabg (to have a bypass) is significant and increases the chance of survival. "
-              )
+              p("Good for survival is having a bypass (cabg), arrhythmias and being female."),
+              p("Bad for survival is having metastatic cancer, being old, missed many outpatient appointments (prior_dnas) or a long stay in the hospital."),
             )
           ),
           tabPanel(
@@ -479,42 +483,60 @@ server <- function(input, output, session) {
   output$gender_linearModel <-
     renderPrint(summary(glm(death ~ gender, data = dataset, family = binomial())))
   
+  
+  
+  
+  
+  
   output$h2_summary_lm_all <-
-    renderPrint(summary(log.model))
+    renderPrint(summary(fullmodel))
   
-  output$h2_parameters_favor_fatal <-
-    renderPrint(names(for_death))
+  output$h2_backwards <-
+    renderPrint(backwards$aic)
   
-  output$h2_significant_parameter <-
-    renderPrint(summary(h2.model))
+  output$h2_forwards <-
+    renderPrint(forwards$aic)
   
-  output$h2_only_two_parameter <-
-    renderPrint(summary(h2.model.2))
+  output$h2_bothways <-
+    renderPrint(bothways$aic)
   
-  output$h3_summary_lm_all <-
-    renderPrint(summary(log.model))
+  output$h2_formula_forwards <-
+    renderPrint(formula(forwards))
   
-  output$h3_parameters_favor_survival <-
-    renderPrint(names(for_survival))
+  output$h2_best_model <-
+    renderPrint(summary(forwards))
   
-  output$h3_significant_parameter <-
+  output$h2_names_coefficients <-
+    renderPrint(names(forwards$coefficients))
+  
+  output$h2_remaining <-
+    renderPrint(forwards$coefficients[c("age" ,"los" , "metastatic_cancer1", "prior_dnas", "gender2", "cabg1", "arrhythmias1")]
+    )
+  
+  output$h4_significant_predictor <-
     renderPrint(summary(h3.model))
   
-  output$h3_only_two_parameter <-
-    renderPrint(summary(h3.model.2))
+  output$h5_significant_predictor <-
+    renderPrint(summary(h3.model))
   
-  output$h3_crosstable_cabg <-
-    renderPrint(
-      CrossTable(
-        dataset$cabg,
-        dataset$death,
-        fisher = F,
-        chisq = T,
-        expected = F,
-        sresid = F,
-        format = "SPSS"
+  output$h5_significant_predictor_2 <-
+    renderPrint(summary(h2.model))
+  
+  output$h5_significant_predictor_3 <-
+    renderPrint(summary(
+      glm(
+        death ~ los + age + dementia + metastatic_cancer + prior_dnas + senile,
+        data = dataset,
+        family = binomial()
       )
-    )
+    ))
+  
+  
+  
+  
+  
+  
+  
   
   output$h4_significant_parameter <-
     renderPrint(summary(h3.model))
@@ -578,7 +600,7 @@ server <- function(input, output, session) {
       ggplot(heart.failure, aes(x = age, y = as.numeric(death) - 1)) +
         geom_point(alpha = 1) +
         stat_smooth(
-          method = "glm",
+          method = "lm",
           aes(color = "red"),
           se = T,
           fullrange = T,
