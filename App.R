@@ -30,6 +30,8 @@ library(waffle)
 
 rm(list = ls())
 
+linebreaks <- function(n){HTML(strrep(br(), n))}
+
 dataset <- read_csv("dataset_heartFailure.csv")
 dataset_without_NA <- na.omit(dataset)
 dataset_correlations <- cor(dataset_without_NA)
@@ -126,6 +128,7 @@ h3.model.2 <-
       data = dataset,
       family = binomial())
 grouped_number <- dataset %>% group_by(prior_dnas, death) %>% summarise(count = n())
+grouped_age <- dataset %>% group_by(age, death) %>% summarise(count = n())
 
 
 
@@ -272,10 +275,43 @@ ui <-
               br(),
               h4("Final assessment of the hypothesis"),
               p(
-                "The hypothesis 2 and 3 seems to be confirmed. There are comorbidities which feature significantly in fatalities and in survival."
+                "The hypothesis 2 and 3 seems to be confirmed. There are comorbidities which feature significantly in fatalities and other which feature significantly in survival."
               ),
               p("Good for survival is having a bypass (cabg), arrhythmias and being female."),
               p("Bad for survival is having metastatic cancer, being old, missed many outpatient appointments (prior_dnas) or a long stay in the hospital."),
+             br(),
+               h4("Further Analysis"),
+              p("Since we have seen, that the predictor 'age' with a p-value of 2e-16 is very significant, we will do some further analysis."),
+              br(),
+             plotOutput("curve_age_dying"),
+              linebreaks(2),
+              sidebarPanel(
+                sliderInput(
+                  inputId = "min_age",
+                  label = "Minimum age:",
+                  value = min_age,
+                  min = min_age,
+                  max = max_age,
+                  sep = ""
+                ),
+                sliderInput(
+                  inputId = "max_age",
+                  label = "Maximum age:",
+                  value = max_age,
+                  min = min_age,
+                  max = max_age,
+                  sep = ""
+                ),
+                selectInput(
+                  inputId = "chart_type",
+                  label = "Chart type:",
+                  choices = c("Pie chart", "Waffle chart") ,
+                  selected = "Pie chart"
+                )
+              )
+              ,
+              mainPanel(wellPanel(plotOutput("age_chart"),)),
+             linebreaks(25),
             )
           ),
           tabPanel(
@@ -343,7 +379,8 @@ ui <-
               p("As one can see, the graph increases with the number of missed appointments, what further supports our hypothesis."),
               br(),
               h4("4. Final assessment of the hypothesis"),
-              p("Our hypothesis seems to be confirmed, so that missed appointments have a negativ effect on survival.")
+              p("Our hypothesis seems to be confirmed, so that missed appointments have a negativ effect on survival."),
+              br(),
             )
           ),
           tabPanel(
@@ -357,37 +394,6 @@ ui <-
       ),
       tabPanel(
         "Further analysis",
-        h3("Percentage death rate within an age group"),
-        br(),
-        sidebarPanel(
-          sliderInput(
-            inputId = "min_age",
-            label = "Minimum age:",
-            value = min_age,
-            min = min_age,
-            max = max_age,
-            sep = ""
-          ),
-          sliderInput(
-            inputId = "max_age",
-            label = "Maximum age:",
-            value = max_age,
-            min = min_age,
-            max = max_age,
-            sep = ""
-          ),
-          selectInput(
-            inputId = "chart_type",
-            label = "Chart type:",
-            choices = c("Pie chart", "Waffle chart") ,
-            selected = "Pie chart"
-          )
-        ),
-        mainPanel(wellPanel(plotOutput("age_chart"),)),
-        br(),
-        h3("Effect of patient age on dying"),
-        wellPanel(plotOutput("curve_age_dying")),
-        br(),
         h3("Effect of patient age on the length of the hospitalisation"),
         sidebarPanel(
           radioButtons(
@@ -597,18 +603,19 @@ server <- function(input, output, session) {
   
   output$curve_age_dying <-
     renderPlot({
-      ggplot(heart.failure, aes(x = age, y = as.numeric(death) - 1)) +
-        geom_point(alpha = 1) +
+      ggplot() +
+        geom_point(data = grouped_age, aes(x = age, y = as.numeric(death)), size = grouped_age$count) +
         stat_smooth(
-          method = "lm",
-          aes(color = "red"),
+          data = heart.failure,
+          method = "glm",
           se = T,
           fullrange = T,
-          method.args = list(family = binomial)
+          method.args = list(family = binomial),
+          aes(x = age, y = as.numeric(death)-1, color = "red")
         ) +
         theme(legend.position = "none") +
         labs(title = "Effect of patient age on dying", x = "Patient age (in years)", y = "Chance of death") +
-        scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + xlim(0, 150)
+        scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + xlim(0, 150) + ylim(-0.25,1.25)
     })
   
   output$age_los_chart <-
