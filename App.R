@@ -355,7 +355,9 @@ ui <-
               br(),
               h4("Reuse  the analysis of hypothesis 2 & 3"),
               p(
-                "As we have seen in the analysis of hypothesis 2 & 3, the parameter fu_time does not have a significant effect on the chance of survival. Therefore, we will have a look at the parameter 'los' instead."
+                "As we have seen in the analysis of hypothesis 2 & 3, the parameter fu_time does not have a significant effect on the chance of survival."),
+              verbatimTextOutput("h4_remaining"),
+                p("Therefore, we will have a look at the parameter 'los' instead."
               ),
               br(),
               h4("Predictor 'los'"),
@@ -420,25 +422,12 @@ ui <-
                 p(
                   "As we have seen in the analysis of hypothesis 2 & 3, missing outpatient appointments has a significant negative effect on the chance of survival."
                 ),
-                verbatimTextOutput("h5_significant_parameter"),
+                verbatimTextOutput("h5_remaining"),
+                p("As we can see above, prior_dnas has a negative impact on the chance of survival. This means that many missed outpatient appointments increase the risk of death."),
                 br(),
+                h4("Plot of the correlation"),
                 p(
-                  "If we have a look at the analysis of hypothesis 2, we can see, that missed appointments have a negative effect on survival."
-                ),
-                verbatimTextOutput("h5_significant_parameter_2"),
-                br(),
-                h4("3. Further analysis"),
-                p(
-                  "Now, we take all parameters with a significance tag from the model above and create a new linear model with those parameters"
-                ),
-                verbatimTextOutput("h5_significant_parameter_3"),
-                p(
-                  "Furthermore, we consider the linear model if we only use the most significant parameter 'age' and the parameter 'prior_dnas'."
-                ),
-                verbatimTextOutput("h5_significant_parameter_4"),
-                p("Here, we can see that 'prior_dnas' is still significant."),
-                p(
-                  "Finally, we will plot the correlation between 'death' and 'prior_dnas'."
+                  "We will plot the correlation between 'death' and 'prior_dnas'."
                 ),
                 plotOutput("h5_plot"),
                 p(
@@ -578,6 +567,17 @@ ui <-
           output$h4_los_summary <-
             renderPrint(summary(h4.los))
           
+          output$h4_remaining <-
+            renderPrint(forwards$coefficients[c(
+              "age" ,
+              "los" ,
+              "metastatic_cancer1",
+              "prior_dnas",
+              "gender2",
+              "cabg1",
+              "arrhythmias1"
+            )])
+          
           output$h4_los_plot <-
             renderPlot(
               ggplot() +
@@ -600,6 +600,16 @@ ui <-
           output$h4_interaction <-
             renderPrint(summary(h4.interaction))
           
+          output$h5_remaining <-
+            renderPrint(forwards$coefficients[c(
+              "age" ,
+              "los" ,
+              "metastatic_cancer1",
+              "prior_dnas",
+              "gender2",
+              "cabg1",
+              "arrhythmias1"
+            )])
           
           
           
