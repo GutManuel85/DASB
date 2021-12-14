@@ -268,7 +268,7 @@ ui <-
                 p("Both ways:"),
                 verbatimTextOutput("h2_bothways"),
                 p(
-                  "The AIC of all three models is 1231.221, so all three approaches seem to have resulted in the same model."
+                  "The AIC of all three models is 1174.165, so all three approaches seem to have resulted in the same model."
                 )
               ),
               wellPanel(
@@ -277,7 +277,7 @@ ui <-
               ),
               wellPanel(
                 p("Let's have a look at the predictors of this model"),
-                #verbatimTextOutput("h2_best_model"),
+                verbatimTextOutput("h2_best_model"),
                 p(
                   "So what do the numbers mean? For age which is numerical the estimate is 0.07. Each additional year increases the chance of dying by 0.07. For a categorical predictor like gender an estimate of -0.47 means that if the patient is female the chance of dying is decreased by 0.47."
                 )
@@ -286,7 +286,7 @@ ui <-
                 p("Lets consider the coefficients/predictors"),
                 verbatimTextOutput("h2_names_coefficients"),
                 p(
-                  "Lets discard crt, senile and hypertension since their p-Values don't indicate them as significant. The remaining predictors are:"
+                  "Lets discard 'crt' since its p-Values doesn't indicate as significant. The remaining predictors are:"
                 ),
                 verbatimTextOutput("h2_remaining"),
               ),
@@ -411,14 +411,14 @@ ui <-
                   "Hypothesis 5: Missing fewer outpatient appoitments has a positive effect on survival"
                 ),
                 br(),
-                h4("1. Data"),
+                h4("Data"),
                 p(
                   "Explination of parameter prior_dnas: number of outpatient appointments missed in the previous year"
                 ),
                 br(),
-                h4("2. Reuse  the analysis of hypothesis 3"),
+                h4("Reuse  the analysis of hypothesis 2 & 3"),
                 p(
-                  "As we have seen in the analysis of hypothesis 3, there is only the parameter 'cabg', which has a significant positive influence on the chance of survival. Below is the linear model again."
+                  "As we have seen in the analysis of hypothesis 2 & 3, missing outpatient appointments has a significant negative effect on the chance of survival."
                 ),
                 verbatimTextOutput("h5_significant_parameter"),
                 br(),
