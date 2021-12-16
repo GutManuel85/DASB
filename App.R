@@ -340,7 +340,7 @@ ui <-
               plotOutput("h4_los_plot"),
               br(),
               p(
-                "As we can see, staying in hospital for a long time seems to have a negative effect on the chance of survival. But we have to concider two aspects here. On the one hand, the plot shows that the confidence bands around the predictor are quite large, so 'los' alone is not a very good predictor of patient mortality. On the other hand, we have to ask wheter the length of stay is more effect or more consequence of a fatale outcome."
+                "As we can see, staying in hospital for a long time seems to have a negative effect on the chance of survival. But we have to concider two aspects here. On the one hand, the plot shows that the confidence bands around the predictor are quite large, so 'los' alone is not a very good predictor of patient mortality. On the other hand, we have to ask whether the length of stay is more effect or more consequence of a fatale outcome."
               ),
               br(),
               h4("Combination of 'los' and 'age'"),
